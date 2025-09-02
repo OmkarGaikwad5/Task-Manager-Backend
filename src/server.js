@@ -9,13 +9,13 @@ import pushRoutes from './routes/push.js';
 
 const app = express();
 
-const ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
+const ORIGIN = process.env.CORS_ORIGIN || 'https://task-manager-v-theta.vercel.app/login';
 app.use(cors({ origin: ORIGIN, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
 app.get('/', (_req, res) => {
-  res.json({ ok: true, service: 'Vexocore Task Manager API' });
+  res.json({ ok: true, service: ' Task Manager ' });
 });
 
 app.use('/api/auth', authRoutes);
