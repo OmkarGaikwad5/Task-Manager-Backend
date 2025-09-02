@@ -1,22 +1,12 @@
-import { Router } from 'express';
-import cors from 'cors';
-import { auth } from '../middleware/auth.js';
-import { subscribe, testPush } from '../controllers/pushController.js';
+import { Router } from "express";
+import { auth } from "../middleware/auth.js";
+
+// stub handlers
+async function subscribe(req, res){ res.status(201).json({ ok: true }); }
+async function testPush(req, res){ res.json({ delivered: true }); }
 
 const router = Router();
-
-// ⚡ CORS must come first
-router.use(cors({
-  origin: process.env.CORS_ORIGIN,
-  credentials: true,
-  methods: ["POST","OPTIONS"],
-}));
-
-// ✅ Auth middleware after CORS
 router.use(auth);
-
-// Routes
-router.post('/subscribe', subscribe);
-router.post('/test', testPush);
-
+router.post("/subscribe", subscribe);
+router.post("/test", testPush);
 export default router;

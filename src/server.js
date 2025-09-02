@@ -1,32 +1,40 @@
-import 'dotenv/config';
-import express from 'express';
-import cookieParser from 'cookie-parser';
-import cors from 'cors';
-import { connectDB } from './config/db.js';
-import authRoutes from './routes/auth.js';
-import taskRoutes from './routes/tasks.js';
-import pushRoutes from './routes/push.js';
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import { connectDB } from "./config/db.js";
+import authRoutes from "./routes/auth.js";
+import taskRoutes from "./routes/tasks.js";
+import pushRoutes from "./routes/push.js";
 
 const app = express();
+
+// connect once at cold start (safe on Vercel)
 connectDB();
 
-// Parse JSON and cookies
+// JSON & cookies
 app.use(express.json());
 app.use(cookieParser());
 
-// ⚡ CORS setup
-app.use(cors({
-  origin: 'https://task-manager-v-theta.vercel.app', // frontend URL
-  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
-  credentials: true, // allow cookies to be sent
-}));
+// *** CORS: allow your frontend and cookies ***
+const FRONTEND_ORIGIN = process.env.CORS_ORIGIN || "https://task-manager-v-theta.vercel.app";
+app.use(
+  cors({
+    origin: FRONTEND_ORIGIN,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  })
+);
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/tasks', taskRoutes);
-app.use('/api/push', pushRoutes);
+// health
+app.get("/", (_req, res) => {
+  res.json({ ok: true, service: "Task Manager API", originAllowed: FRONTEND_ORIGIN });
+});
 
-app.get('/', (_req, res) => res.json({ ok: true, service: 'Task Manager API' }));
+// routes
+app.use("/api/auth", authRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/push", pushRoutes);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+export default app;
