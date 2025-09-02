@@ -9,20 +9,22 @@ import pushRoutes from './routes/push.js';
 
 const app = express();
 
-//connection
-const ORIGIN = process.env.CORS_ORIGIN || 'https://task-manager-v-theta.vercel.app/login';
+// Allow credentials and frontend origin
+const ORIGIN = process.env.CORS_ORIGIN || 'https://task-manager-v-theta.vercel.app';
 app.use(cors({ origin: ORIGIN, credentials: true }));
+
 app.use(express.json());
 app.use(cookieParser());
 
 app.get('/', (_req, res) => {
-  res.json({ ok: true, service: ' Task Manager ' });
+  res.json({ ok: true, service: 'Task Manager' });
 });
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/push', pushRoutes);
 
+// Error handler
 app.use((err, _req, res, _next) => {
   console.error(err);
   res.status(err.status || 500).json({ error: err.message || 'Server error' });
@@ -37,3 +39,4 @@ connectDB().then(() => {
 });
 
 export default app;
+clear
