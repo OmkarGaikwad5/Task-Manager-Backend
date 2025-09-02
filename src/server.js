@@ -9,6 +9,7 @@ import pushRoutes from './routes/push.js';
 
 const app = express();
 
+//connection
 const ORIGIN = process.env.CORS_ORIGIN || 'https://task-manager-v-theta.vercel.app/login';
 app.use(cors({ origin: ORIGIN, credentials: true }));
 app.use(express.json());
