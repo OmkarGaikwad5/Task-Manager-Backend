@@ -1,17 +1,12 @@
 import 'dotenv/config';
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import cors from 'cors';
 import { connectDB } from './config/db.js';
 import authRoutes from './routes/auth.js';
 import taskRoutes from './routes/tasks.js';
 import pushRoutes from './routes/push.js';
 
 const app = express();
-
-// Allow credentials and frontend origin
-const ORIGIN = process.env.CORS_ORIGIN || 'https://task-manager-v-theta.vercel.app';
-app.use(cors({ origin: ORIGIN, credentials: true }));
 
 app.use(express.json());
 app.use(cookieParser());
@@ -39,4 +34,3 @@ connectDB().then(() => {
 });
 
 export default app;
-clear
