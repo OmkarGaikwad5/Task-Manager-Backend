@@ -1,29 +1,69 @@
-import { Router } from 'express';
-import { register, login, me, logout } from '../controllers/authController.js';
-import { auth } from '../middleware/auth.js';
-import cors from 'cors';
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js'; // your user model
+import authMiddleware from '../middleware/auth.js';
 
-const router = Router();
+const router = express.Router();
 
-// ✅ CORS for this route
-router.use(cors({
-  origin: process.env.CORS_ORIGIN,
-  credentials: true,
-  methods: ["GET","POST","OPTIONS"],
-}));
+// REGISTER
+router.post('/register', async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
 
-// ✅ Handle preflight requests
-router.options("*", (_req, res) => {
-  res.header("Access-Control-Allow-Origin", process.env.CORS_ORIGIN);
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.sendStatus(200);
+    let user = await User.findOne({ email });
+    if (user) return res.status(400).json({ message: 'User already exists' });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user = new User({ name, email, password: hashedPassword });
+    await user.save();
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+    res.cookie('token', token, { httpOnly: true, sameSite: 'None', secure: true });
+    res.status(201).json({ user: { id: user._id, name: user.name, email: user.email } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-router.post('/register', register);
-router.post('/login', login);
-router.post('/logout', logout);
-router.get('/me', auth, me);
+// LOGIN
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+    res.cookie('token', token, { httpOnly: true, sameSite: 'None', secure: true });
+    res.json({ user: { id: user._id, name: user.name, email: user.email } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET CURRENT USER
+router.get('/me', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    res.json({ user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// LOGOUT
+router.post('/logout', (_req, res) => {
+  res.clearCookie('token', { httpOnly: true, sameSite: 'None', secure: true });
+  res.json({ message: 'Logged out' });
+});
 
 export default router;
