@@ -21,9 +21,7 @@ const FRONTEND_ORIGIN = process.env.CORS_ORIGIN || "https://task-manager-v-theta
 app.use(
   cors({
     origin: FRONTEND_ORIGIN,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
+   
   })
 );
 
